@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Enhanced Solar Panel WebAR</title>
+
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@ar-js-org/ar.js@3.4.7/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; }
+    .hud {
+      position: fixed; z-index: 10; left: 50%; transform: translateX(-50%);
+      width: calc(100% - 32px); max-width: 520px; top: 12px; box-sizing: border-box;
+      padding: 12px 15px; color: #fff; text-align: center; border-radius: 12px;
+      background: rgba(9, 20, 35, .82); border: 1px solid rgba(255,255,255,.2);
+      box-shadow: 0 5px 18px rgba(0,0,0,.25); font-size: 14px; line-height: 1.4;
+    }
+    .hud strong { display: block; font-size: 16px; margin-bottom: 3px; color: #8fe3ff; }
+    .status { display: block; margin-top: 5px; font-size: 12px; color: #d7e8f4; }
+    .tip {
+      position: fixed; z-index: 10; bottom: 14px; left: 50%; transform: translateX(-50%);
+      width: calc(100% - 32px); max-width: 520px; box-sizing: border-box;
+      padding: 9px 12px; color: #fff; text-align: center; border-radius: 10px;
+      background: rgba(9,20,35,.7); font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="hud">
+    <strong>Solar Panel AR Model</strong>
+    Point your camera at the Hiro marker to view the model.
+    <span class="status" id="status">Waiting for marker…</span>
+  </div>
+  <div class="tip">Keep the full Hiro marker visible and use good lighting.</div>
+
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true"
+    arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false"
+  >
+    <a-assets>
+      <a-mixin id="metal" material="color: #aeb9c4; metalness: 0.75; roughness: 0.28"></a-mixin>
+      <a-mixin id="darkMetal" material="color: #263442; metalness: 0.65; roughness: 0.34"></a-mixin>
+    </a-assets>
+
+    <a-light type="ambient" color="#dceaff" intensity="0.9"></a-light>
+    <a-light type="directional" color="#ffffff" intensity="1.5" position="-2 4 3"></a-light>
+    <a-light type="directional" color="#6ba8ff" intensity="0.45" position="2 2 -3"></a-light>
+
+    <a-marker id="hiroMarker" preset="hiro" smooth="true" smooth-count="5" smooth-tolerance="0.01" smooth-threshold="2">
+      <!-- Keep the model stationary for easier viewing -->
+      <a-entity id="solarRig" scale="0.62 0.62 0.62" position="0 0.02 0">
+
+        <!-- Ground plate and feet -->
+        <a-box position="0 0.055 0" width="2.55" height="0.11" depth="1.62"
+               material="color: #303b46; metalness: 0.55; roughness: 0.4"></a-box>
+        <a-box position="-0.88 0.125 0.48" width="0.42" height="0.045" depth="0.24" mixin="darkMetal"></a-box>
+        <a-box position="0.88 0.125 0.48" width="0.42" height="0.045" depth="0.24" mixin="darkMetal"></a-box>
+        <a-box position="-0.88 0.125 -0.48" width="0.42" height="0.045" depth="0.24" mixin="darkMetal"></a-box>
+        <a-box position="0.88 0.125 -0.48" width="0.42" height="0.045" depth="0.24" mixin="darkMetal"></a-box>
+
+        <!-- Main support posts -->
+        <a-box position="-0.76 0.66 0" width="0.12" height="1.08" depth="0.12" mixin="metal"></a-box>
+        <a-box position="0.76 0.66 0" width="0.12" height="1.08" depth="0.12" mixin="metal"></a-box>
+
+        <!-- Diagonal braces add a more realistic mounting frame -->
+        <a-entity position="-0.38 0.55 0" rotation="0 0 -35">
+          <a-box width="0.09" height="0.78" depth="0.09" mixin="darkMetal"></a-box>
+        </a-entity>
+        <a-entity position="0.38 0.55 0" rotation="0 0 35">
+          <a-box width="0.09" height="0.78" depth="0.09" mixin="darkMetal"></a-box>
+        </a-entity>
+        <a-box position="0 0.95 0" width="1.85" height="0.09" depth="0.12" mixin="darkMetal"></a-box>
+
+        <!-- Panel backing and dark aluminium border -->
+        <a-box position="0 1.30 0" rotation="-25 0 0" width="2.28" height="0.10" depth="1.38"
+               material="color: #1b2631; metalness: 0.7; roughness: 0.3"></a-box>
+        <a-box position="0 1.355 -0.015" rotation="-25 0 0" width="2.12" height="0.035" depth="1.22"
+               material="color: #102b50; metalness: 0.35; roughness: 0.24"></a-box>
+
+        <!-- Blue-black photovoltaic cells: 4 columns x 6 rows -->
+        <!-- Cell centers are evenly spaced inside the panel frame -->
+        <a-entity id="solarCells">
+          <a-box position="-0.78 1.382 -0.455" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #123c78; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="-0.26 1.382 -0.455" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #174b91; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="0.26 1.382 -0.455" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #123c78; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="0.78 1.382 -0.455" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #174b91; metalness: 0.38; roughness: 0.24"></a-box>
+
+          <a-box position="-0.78 1.382 -0.273" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #174b91; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="-0.26 1.382 -0.273" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #123c78; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="0.26 1.382 -0.273" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #174b91; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="0.78 1.382 -0.273" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #123c78; metalness: 0.38; roughness: 0.24"></a-box>
+
+          <a-box position="-0.78 1.382 -0.091" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #123c78; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="-0.26 1.382 -0.091" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #174b91; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="0.26 1.382 -0.091" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #123c78; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="0.78 1.382 -0.091" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #174b91; metalness: 0.38; roughness: 0.24"></a-box>
+
+          <a-box position="-0.78 1.382 0.091" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #174b91; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="-0.26 1.382 0.091" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #123c78; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="0.26 1.382 0.091" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #174b91; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="0.78 1.382 0.091" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #123c78; metalness: 0.38; roughness: 0.24"></a-box>
+
+          <a-box position="-0.78 1.382 0.273" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #123c78; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="-0.26 1.382 0.273" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #174b91; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="0.26 1.382 0.273" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #123c78; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="0.78 1.382 0.273" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #174b91; metalness: 0.38; roughness: 0.24"></a-box>
+
+          <a-box position="-0.78 1.382 0.455" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #174b91; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="-0.26 1.382 0.455" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #123c78; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="0.26 1.382 0.455" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #174b91; metalness: 0.38; roughness: 0.24"></a-box>
+          <a-box position="0.78 1.382 0.455" rotation="-25 0 0" width="0.48" height="0.018" depth="0.17" material="color: #123c78; metalness: 0.38; roughness: 0.24"></a-box>
+        </a-entity>
+
+        <!-- Fine cell dividers -->
+        <a-box position="-0.52 1.397 0" rotation="-25 0 0" width="0.018" height="0.012" depth="1.12" color="#8dbce8"></a-box>
+        <a-box position="0 1.397 0" rotation="-25 0 0" width="0.018" height="0.012" depth="1.12" color="#8dbce8"></a-box>
+        <a-box position="0.52 1.397 0" rotation="-25 0 0" width="0.018" height="0.012" depth="1.12" color="#8dbce8"></a-box>
+        <a-box position="0 1.397 -0.36" rotation="-25 0 0" width="2.0" height="0.012" depth="0.018" color="#8dbce8"></a-box>
+        <a-box position="0 1.397 -0.18" rotation="-25 0 0" width="2.0" height="0.012" depth="0.018" color="#8dbce8"></a-box>
+        <a-box position="0 1.397 0" rotation="-25 0 0" width="2.0" height="0.012" depth="0.018" color="#8dbce8"></a-box>
+        <a-box position="0 1.397 0.18" rotation="-25 0 0" width="2.0" height="0.012" depth="0.018" color="#8dbce8"></a-box>
+        <a-box position="0 1.397 0.36" rotation="-25 0 0" width="2.0" height="0.012" depth="0.018" color="#8dbce8"></a-box>
+
+        <!-- Small frame bolts -->
+        <a-sphere position="-1.04 1.38 -0.58" radius="0.025" material="color: #d9e1e8; metalness: 0.8; roughness: 0.25"></a-sphere>
+        <a-sphere position="1.04 1.38 -0.58" radius="0.025" material="color: #d9e1e8; metalness: 0.8; roughness: 0.25"></a-sphere>
+        <a-sphere position="-1.04 1.38 0.58" radius="0.025" material="color: #d9e1e8; metalness: 0.8; roughness: 0.25"></a-sphere>
+        <a-sphere position="1.04 1.38 0.58" radius="0.025" material="color: #d9e1e8; metalness: 0.8; roughness: 0.25"></a-sphere>
+
+      </a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    const marker = document.getElementById('hiroMarker');
+    const status = document.getElementById('status');
+    marker.addEventListener('markerFound', () => {
+      status.textContent = 'Hiro marker detected — model is visible.';
+      status.style.color = '#9dffbd';
+    });
+    marker.addEventListener('markerLost', () => {
+      status.textContent = 'Marker lost — point the camera at Hiro again.';
+      status.style.color = '#d7e8f4';
+    });
+  </script>
+</body>
+</html>
